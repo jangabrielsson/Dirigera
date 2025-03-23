@@ -15,6 +15,8 @@ _DEVELOP="../hc3emu"
 if require and not QuickApp then require("hc3emu") end
 --%%name=Dirigera
 --%% id=1782
+--%%uid=UPD896846032517893
+--%%save=Dirigera.fqa
 --%%proxy=DirigeraProxy
 --%%type=com.fibaro.deviceController
 --%%var=debug:"test=false,http=true,color=true"

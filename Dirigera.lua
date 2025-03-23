@@ -11,7 +11,7 @@ of this license document, but changing it is not allowed.
 
 SHA 256 library from @tinman
 --]]
-_DEVELOP="../hc3emu"
+_DEVELOP="../../hc3emu"
 if require and not QuickApp then require("hc3emu") end
 --%%name=Dirigera
 --%% id=1782
@@ -37,8 +37,10 @@ if require and not QuickApp then require("hc3emu") end
 
 local VERSION = "1.0"
 DG = DG or { childs = {}}
-
-local TOKEN = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjAxNTRmZDM0MTA1MzMxYmMxNjM5MDAxZTQ3OTJjMDUxZWZiNjc0YjI1YmQ1YTRhZGYzMTI1MTFkYzI4YzFkMDgifQ.eyJpc3MiOiJkN2ZiNDNjZi1lOTgxLTQxNzUtOTliMi1iYTdhYjM3ZTY5NmQiLCJ0eXBlIjoiYWNjZXNzIiwiYXVkIjoiaG9tZXNtYXJ0LmxvY2FsIiwic3ViIjoiNTI5ZDA3NzQtZTgxNi00ZGI0LTllYmUtYmNjMDVhYTljYTNjIiwiaWF0IjoxNzI4NTQ5NzE0LCJleHAiOjIwNDQxMjU3MTR9.25sVue2TyZsdx2ZobazMFO3oiIstkcL-nsAuq_kg257OOmp7OLKJEffdAHyBcRXHDM4T_S3tYmdt71jPIW17Sw"
+local TOKEN = nil
+if fibaro.hc3emu then
+  TOKEN = fibaro.hc3emu:getQA(3534).flags.Dirigera
+end
 ---------------------------------------------------------------
 ---  local variables ------------------------------------------
 ---------------------------------------------------------------
