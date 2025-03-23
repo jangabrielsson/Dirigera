@@ -15,7 +15,9 @@ _DEVELOP="../hc3emu"
 if require and not QuickApp then require("hc3emu") end
 --%%name=Dirigera
 --%% id=1782
---%%proxy="DirigeraProxy"
+--%%uid=UPD896846032517893
+--%%save=Dirigera.fqa
+--%%proxy=DirigeraProxy
 --%%type=com.fibaro.deviceController
 --%%var=debug:"test=false,http=true,color=true"
 
@@ -33,7 +35,7 @@ if require and not QuickApp then require("hc3emu") end
 
 --%%debug=refresh:false
 
-local VERSION = "0.99"
+local VERSION = "1.0"
 DG = DG or { childs = {}}
 
 local TOKEN = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjAxNTRmZDM0MTA1MzMxYmMxNjM5MDAxZTQ3OTJjMDUxZWZiNjc0YjI1YmQ1YTRhZGYzMTI1MTFkYzI4YzFkMDgifQ.eyJpc3MiOiJkN2ZiNDNjZi1lOTgxLTQxNzUtOTliMi1iYTdhYjM3ZTY5NmQiLCJ0eXBlIjoiYWNjZXNzIiwiYXVkIjoiaG9tZXNtYXJ0LmxvY2FsIiwic3ViIjoiNTI5ZDA3NzQtZTgxNi00ZGI0LTllYmUtYmNjMDVhYTljYTNjIiwiaWF0IjoxNzI4NTQ5NzE0LCJleHAiOjIwNDQxMjU3MTR9.25sVue2TyZsdx2ZobazMFO3oiIstkcL-nsAuq_kg257OOmp7OLKJEffdAHyBcRXHDM4T_S3tYmdt71jPIW17Sw"
@@ -123,6 +125,7 @@ end
 function QuickApp:onInit()
   print("Dirigera version:",VERSION)
   self:updateView("titelLabel","text","Dirigera v"..VERSION)
+  function self.initChildDevices() end
   local dbgs = self:getVariable("debug")
   dbgs:gsub("(%w+)=([FfAaLlSsEeTtRrUu]+)",function(f,v) 
     v = v:lower()
