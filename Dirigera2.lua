@@ -11,15 +11,17 @@ of this license document, but changing it is not allowed.
 
 SHA 256 library from @tinman
 --]]
-_DEVELOP="../hc3emu"
+_DEVELOP="../../hc3emu"
 if require and not QuickApp then require("hc3emu") end
 --%%name=Dirigera
 --%% id=1782
 --%%uid=UPD896846032517893
 --%%save=Dirigera.fqa
---%%proxy=DirigeraProxy
+--%% proxy=DirigeraProxy
+--%%webui=true
 --%%type=com.fibaro.deviceController
 --%%var=debug:"test=false,http=true,color=true"
+--%%port=8266
 
 --%%u={label="titelLabel",text="Dirigera"}
 --%%u={{button="b1",text="Request token",visible=true,onReleased="requestToken"},{button="b2",text="Get token",visible=true,onReleased="getToken"}}
@@ -27,9 +29,9 @@ if require and not QuickApp then require("hc3emu") end
 --%%u={multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
 
 --%%file=$hc3emu.sha2,sha2
---%%file=$hc3emu.QwikChild,QC;
---%%file=Lib.lua,Lib;
---%%file=Devices2.lua,Devices;
+--%%file=$hc3emu.QwikChild,QC
+--%%file=Lib.lua,Lib
+--%%file=Devices2.lua,Devices
 --%%file=Auth.lua,Auth;
 --%%var=IP:"192.168.1.165"
 

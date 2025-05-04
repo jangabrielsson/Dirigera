@@ -20,7 +20,8 @@ if require and not QuickApp then require("hc3emu") end
 --%%proxy=DirigeraProxy
 --%%type=com.fibaro.deviceController
 --%%var=debug:"test=false,http=true,color=true"
-
+--%%port=8269
+--%%webui=true
 --%%u={label="titelLabel",text="Dirigera"}
 --%%u={{button="b1",text="Request token",visible=true,onReleased="requestToken"},{button="b2",text="Get token",visible=true,onReleased="getToken"}}
 --%%u={{button="b3",text="List device info",visible=true,onReleased="listDeviceInfo"},{button="b4",text="Restart",visible=true,onReleased="restartQA"}}
@@ -39,7 +40,7 @@ local VERSION = "1.0"
 DG = DG or { childs = {}}
 local TOKEN = nil
 if fibaro.hc3emu then
-  TOKEN = fibaro.hc3emu:getQA(3534).flags.Dirigera
+  TOKEN = fibaro.hc3emu:getQA(plugin.mainDeviceId).directives.DIRIGERA_token
 end
 ---------------------------------------------------------------
 ---  local variables ------------------------------------------

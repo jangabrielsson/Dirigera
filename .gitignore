@@ -1,0 +1,13 @@
+*.fqa
+!hc3emuHelper.fqa
+*.db
+*.rock
+test.lua
+.project
+*.log
+hc3emu.json
+setup.html
+*.out
+test/
+tmp/
+emu/
