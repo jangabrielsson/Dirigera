@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.1.5] - 2026-04-06
+
+## Changes in v0.1.5
+
+- 🐛 **Fix**: enhance error handling in getToken function
+
+
+*Generated automatically from git commits*
+
 ## [v0.1.4] - 2026-04-06
 
 ## Changes in v0.1.4
