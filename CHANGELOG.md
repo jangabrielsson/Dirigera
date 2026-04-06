@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.1.4] - 2026-04-06
+
+## Changes in v0.1.4
+
+- ✨ **Feature**: add release v0.1.3 forum post HTML
+- 🐛 **Fix**: correct formatting of file declarations in Dirigera.lua
+
+
+*Generated automatically from git commits*
+
 ## [v0.1.3] - 2026-04-06
 
 ## Changes in v0.1.3
