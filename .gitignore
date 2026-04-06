@@ -11,3 +11,5 @@ setup.html
 test/
 tmp/
 emu/
+.env
+

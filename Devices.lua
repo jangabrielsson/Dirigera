@@ -548,6 +548,7 @@ function QuickApp:defineClasses()
   ---------------
   local function NoDevice(d)
     print("Device not implemented: ",d.deviceType)
+    print(json.encode(d))
   end
   local deviceTypeMap = {
     ["light"] = Light,

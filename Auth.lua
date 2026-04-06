@@ -2,7 +2,7 @@
 ---  Authorization --------------------------------------------
 ---------------------------------------------------------------
 local fmt = string.format
-
+sha = sha
 local function codeChallenge(codeVerifier)
   local hash = sha.sha256(codeVerifier)
   local binhash = sha.hex2bin(hash)

@@ -11,37 +11,35 @@ of this license document, but changing it is not allowed.
 
 SHA 256 library from @tinman
 --]]
-_DEVELOP="../../hc3emu"
-if require and not QuickApp then require("hc3emu") end
---%%name=Dirigera
+
+--%%name:Dirigera
 --%% id=1782
---%%uid=UPD896846032517893
---%%save=Dirigera.fqa
---%%proxy=DirigeraProxy
---%%type=com.fibaro.deviceController
---%%var=debug:"test=false,http=true,color=true"
---%%port=8269
---%%webui=true
---%%u={label="titelLabel",text="Dirigera"}
---%%u={{button="b1",text="Request token",visible=true,onReleased="requestToken"},{button="b2",text="Get token",visible=true,onReleased="getToken"}}
---%%u={{button="b3",text="List device info",visible=true,onReleased="listDeviceInfo"},{button="b4",text="Restart",visible=true,onReleased="restartQA"}}
---%%u={multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
+--%%uid:UPD896846032517893
+--%%save:Dirigera.fqa
+-- %%proxy:true
+--%%type:com.fibaro.deviceController
+--%%var:debug="http=true"
+-- %%port=8269
+--%%desktop:true
+--%%u:{label="titelLabel",text="Dirigera"}
+--%%u:{{button="b1",text="Request token",visible=true,onReleased="requestToken"},{button="b2",text="Get token",visible=true,onReleased="getToken"}}
+--%%u:{{button="b3",text="List device info",visible=true,onReleased="listDeviceInfo"},{button="b4",text="Restart",visible=true,onReleased="restartQA"}}
+--%%u:{multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
 
---%%file=$hc3emu.sha2,sha2;
---%%file=$hc3emu.QwikChild,QC;
---%%file=Lib.lua,Lib;
---%%file=Devices.lua,Devices;
---%%file=Auth.lua,Auth;
---%%var=IP:"192.168.1.165"
+--%%file:$fibaro.lib.sha2,sha2;
+--%%file:$fibaro.lib.qwikchild,QC;
+--%%file:Lib.lua,Lib;
+--%%file:Devices.lua,Devices;
+--%%file:Auth.lua,Auth;
+--%%var:IP="192.168.1.165"
 
---%%debug=refresh:false
+--%%offline:true
+--%%var:refresh=false
 
-local VERSION = "1.0"
+local VERSION = "1.01"
 DG = DG or { childs = {}}
-local TOKEN = nil
-if fibaro.hc3emu then
-  TOKEN = fibaro.hc3emu:getQA(plugin.mainDeviceId).directives.DIRIGERA_token
-end
+local TOKEN = os.getenv and os.getenv("DIRIGERA_token") or nil
+
 ---------------------------------------------------------------
 ---  local variables ------------------------------------------
 ---------------------------------------------------------------
