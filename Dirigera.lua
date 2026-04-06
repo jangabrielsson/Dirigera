@@ -26,11 +26,11 @@ SHA 256 library from @tinman
 --%%u:{{button="b3",text="List device info",visible=true,onReleased="listDeviceInfo"},{button="b4",text="Restart",visible=true,onReleased="restartQA"}}
 --%%u:{multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
 
---%%file:$fibaro.lib.sha2,sha2;
---%%file:$fibaro.lib.qwikchild,QC;
---%%file:Lib.lua,Lib;
---%%file:Devices.lua,Devices;
---%%file:Auth.lua,Auth;
+--%%file:$fibaro.lib.sha2,sha2
+--%%file:$fibaro.lib.qwikchild,QC
+--%%file:Lib.lua,Lib
+--%%file:Devices.lua,Devices
+--%%file:Auth.lua,Auth
 --%%var:IP="192.168.1.165"
 
 --%%offline:true
