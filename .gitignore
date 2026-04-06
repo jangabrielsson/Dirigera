@@ -1,5 +1,5 @@
 *.fqa
-!hc3emuHelper.fqa
+!dist/Dirigera.fqa
 *.db
 *.rock
 test.lua
