@@ -146,7 +146,7 @@ function QuickApp:onInit()
     print("Start by pressing QA button 'Request token'")
     return
   else
-    print("Your TOKEN :",self.store.token)
+    print("Token stored.")
   end
   local devices = self.store.devices
   if devices == nil then
@@ -161,7 +161,6 @@ function QuickApp:onInit()
     for _,d in ipairs(ddata) do
       devices[d.id] = oldDevices[d.id] or false
       DG:addDevice(d)
-      print(d.id)
     end
     self.store.devices = devices
     self:populateDeviceSelector()

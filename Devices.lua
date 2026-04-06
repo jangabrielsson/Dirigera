@@ -71,8 +71,6 @@ function QuickApp:defineClasses()
   --- Device classes
   class 'ChildDimmableLight'(QwikAppChild) -- Light that only have dimming capabilities
   function ChildDimmableLight:__init(d) QwikAppChild.__init(self,d) end
-  class 'ChildDimmableLight'(QwikAppChild)
-  function ChildDimmableLight:__init(d) QwikAppChild.__init(self,d) end
   function ChildDimmableLight:turnOn()
     self:updateValue(100)
     self.dev:turnOn()
@@ -258,11 +256,11 @@ function QuickApp:defineClasses()
     else
       self.child:updateProperty('state',false)
       self.child:updateProperty('value',0)
-      self.ignoreValue = false
+      self.child.ignoreValue = false
     end
   end
   
-  class 'LightController'
+  class 'LightController'(DirigeraDevice)
   function LightController:__init(d)
     DirigeraDevice.__init(self,d)
   end
@@ -483,6 +481,19 @@ function QuickApp:defineClasses()
       className = 'ChildTempSensor'
     }
   end
+  function AirSensor:change(data)
+    if data.isReachable and self.isReachable ~= data.isReachable then
+      self.isReachable = data.isReachable
+      printc('yellow',"Change '%s' reachable: %s",self.name,data.isReachable)
+    end
+    dumpAttributes(data.id,data.attributes)
+    local dead = self.isReachable == false
+    for _,id in ipairs({self.id.."_pm25", self.id.."_voc", self.id, self.id.."_temp"}) do
+      local c = quickApp.children[id]
+      if c then c:updateProperty('dead', dead) end
+    end
+    self:update(data)
+  end
   function AirSensor:update(d)
     self.currentRH = d.attributes.currentRH or self.currentRH
     self.currentPM25 = d.attributes.currentPM25 or self.currentPM25
@@ -561,7 +572,7 @@ function QuickApp:defineClasses()
     ["environmentSensor"] = AirSensor,
     ["outlet"] = BinarySwitch,
     ['blinds'] = NoDevice, --Blinds,
-    ['waterSensor'] = NoDevice, --WaterSensor
+    ['waterSensor'] = WaterSensor,
     ['airPurifier'] = NoDevice, -- AirPurifier
   }
   
