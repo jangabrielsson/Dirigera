@@ -38,10 +38,6 @@
 
 *Generated automatically from git commits*
 
-## [v0.1.1] - 2026-04-06
-
-## Changes in v0.1.1
-
 - ✨ **Feature**: chore: initialize versioning and update changelog for v0.1.0
 - ✨ **Feature**: add forum post generator and project configuration
   - Introduced `forum-post-generator.sh` to automate the creation of forum posts for releases, including HTML formatting and download links for artifacts.
