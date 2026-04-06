@@ -34,11 +34,15 @@ local function getToken(IP, code, codeVerifier, cb)
     },
     success = function(response)
       local stat,res = pcall(json.decode,response.data)
-      if not stat then
+      if not stat or res == nil then
         ERRORF("Error get token: %s ", json.encode(response))
         return
       end
       local data = res
+      if not data.access_token then
+        ERRORF("No access_token in response: %s", json.encode(data))
+        return
+      end
       cb(data.access_token)
     end,
     error = function(err)
