@@ -7,6 +7,8 @@ local function codeChallenge(codeVerifier)
   local hash = sha.sha256(codeVerifier)
   local binhash = sha.hex2bin(hash)
   local base64hash = sha.bin2base64(binhash)
+  -- RFC 7636: base64url, no padding.
+  base64hash = base64hash:gsub('+','-'):gsub('/','_'):gsub('=+$','')
   return base64hash
 end
 
@@ -21,7 +23,7 @@ local function getToken(IP, code, codeVerifier, cb)
     --['Content-Length'] = #data
     --["Accept"] = "application/json"
   }
-  local tokenURL = fmt("https://%s:8443/v1/oauth/token",IP)
+  local tokenURL = fmt("https://%s:%s/v1/oauth/token",IP,Hub.port)
   -- print(code)
   -- print(data)
   net.HTTPClient():request(tokenURL, {
@@ -52,10 +54,9 @@ local function getToken(IP, code, codeVerifier, cb)
 end
 
 local function sendChallenge(IP, codeVerifier)
-  local authUrl = fmt("https://%s:8443/v1/oauth/authorize",IP)
+  local authUrl = fmt("https://%s:%s/v1/oauth/authorize",IP,Hub.port)
   local params = "?audience=homesmart.local&response_type=code&code_challenge=%s&code_challenge_method=S256"
   local cc = codeChallenge(codeVerifier)
-  cc = cc:sub(1, -2)
   params = fmt(params, cc)
   Hub.lastRequest = nil
   net.HTTPClient():request(authUrl..params, {
@@ -67,7 +68,7 @@ local function sendChallenge(IP, codeVerifier)
       timeout = 10000
     },
     success = function(response)
-      local data = json.decode(response.data)
+      local data = safeDecode(response.data, "sendChallenge")
       if data == nil then 
         ERRORF("Error requesting token: %s", json.encode(response))
         return
@@ -90,7 +91,7 @@ function QuickApp:requestToken()
     randomCode[#randomCode+1] = chars:sub(n, n)
   end
   local codeVerifier = table.concat(randomCode)
-  DEBUGF('test',"%s %s",#codeVerifier,codeVerifier)
+  DEBUGF('test',"verifier len=%d",#codeVerifier)
   sendChallenge(Hub.IP, codeVerifier)
 end
 
@@ -101,7 +102,7 @@ function QuickApp:getToken()
     return
   end
   getToken(Hub.lastRequest.IP, lastRequest.code, lastRequest.codeVerifier, function(token)
-    DEBUGF('test',"Token %s",token)
+    DEBUGF('test',"Token received (prefix=%s…, len=%d)",token:sub(1,6),#token)
     self.store.token = token
     plugin.restart()
   end)

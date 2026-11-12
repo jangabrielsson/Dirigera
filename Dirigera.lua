@@ -13,27 +13,24 @@ SHA 256 library from @tinman
 --]]
 
 --%%name:Dirigera
---%% id=1782
---%%uid:UPD896846032517893
---%%save:Dirigera.fqa
+-- %%save:Dirigera.fqa
 -- %%proxy:true
 --%%type:com.fibaro.deviceController
 --%%var:debug="http=true"
 -- %%port=8269
---%%desktop:true
 --%%u:{label="titelLabel",text="Dirigera"}
 --%%u:{{button="b1",text="Request token",visible=true,onReleased="requestToken"},{button="b2",text="Get token",visible=true,onReleased="getToken"}}
 --%%u:{{button="b3",text="List device info",visible=true,onReleased="listDeviceInfo"},{button="b4",text="Restart",visible=true,onReleased="restartQA"}}
 --%%u:{multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
 
---%%file:$fibaro.lib.sha2,sha2
---%%file:$fibaro.lib.qwikchild,QC
+--%%file:$sha2.lua,sha2
+--%%file:$qwikchild.lua,QC
 --%%file:Lib.lua,Lib
 --%%file:Devices.lua,Devices
 --%%file:Auth.lua,Auth
---%%var:IP="192.168.1.165"
+--%%var:IP="192.168.50.165"
 
---%%offline:true
+--%%mode:offline
 --%%var:refresh=false
 
 local VERSION = "0.1.5"
@@ -91,22 +88,38 @@ function QuickApp:listen()
   local headers = {
     ["Authorization"] = "Bearer "..self.store.token
   }
+  self._wsBackoff = self._wsBackoff or 5
+  self._wsLastError = nil
+  local function reconnect()
+    if self._wsReconnectScheduled then return end
+    self._wsReconnectScheduled = true
+    local delay = self._wsBackoff
+    self:warning(fmt("WebSocket disconnected (%s) - reconnect in %ds",
+      self._wsLastError or "no error", delay))
+    self._wsBackoff = math.min(self._wsBackoff * 2, 60)
+    setTimeout(function()
+      self._wsReconnectScheduled = false
+      self:listen()
+    end, delay * 1000)
+  end
   local function handleConnected()
     DEBUGF('test',"Connected")
+    self._wsBackoff = 5 -- reset backoff on successful connect
+    self._wsLastError = nil
   end
   local function handleDisconnected()
     DEBUGF('test',"Disconnected")
-    self:warning("Disconnected - will restart in 5s")
-    setTimeout(function()
-      plugin.restart()
-    end,5000)
+    reconnect()
   end
   local function handleError(err)
-    ERRORF("Error: %s", err)
+    ERRORF("WebSocket error: %s", err)
+    self._wsLastError = tostring(err)
+    reconnect()
   end
   local function handleDataReceived(data)
     --print(data)
-    data = json.decode(data)
+    data = safeDecode(data, "WebSocket")
+    if data == nil then return end
     local handler  = MessageHandler[data.type or ""]
     if handler then handler(data) 
     else
@@ -124,6 +137,7 @@ function QuickApp:listen()
 end
 
 function QuickApp:onInit()
+  quickApp = self
   print("Dirigera version:",VERSION)
   self:updateView("titelLabel","text","Dirigera v"..VERSION)
   function self.initChildDevices() end
@@ -155,40 +169,64 @@ function QuickApp:onInit()
     for _,child in ipairs(chs) do devices[child.id] = true end
   end
   self.store.devices = devices
-  self:DGET("/devices",function(ddata)
-    local oldDevices = table.copy(devices)
-    devices = {}
-    for _,d in ipairs(ddata) do
-      devices[d.id] = oldDevices[d.id] or false
-      DG:addDevice(d)
+
+  -- Bootstrap chain: GET /devices -> /scenes -> /home, then init children
+  -- and start the WebSocket. On any failure, surface on the title label and
+  -- retry the whole chain with exponential backoff (capped at 60s).
+  self._initBackoff = 5
+  local function bootstrap()
+    local function onError(stage, err)
+      local delay = self._initBackoff
+      local msg = fmt("Init failed at %s (%s) - retry in %ds", stage, tostring(err), delay)
+      ERRORF("%s", msg)
+      self:updateView("titelLabel","text","Dirigera v"..VERSION.." - "..msg)
+      self._initBackoff = math.min(self._initBackoff * 2, 60)
+      setTimeout(bootstrap, delay * 1000)
     end
-    self.store.devices = devices
-    self:populateDeviceSelector()
-    self:DGET("/scenes",function(sdata)
-      for _,d in ipairs(sdata) do
-        DG:addScene(d)
+    self:DGET("/devices",function(ddata)
+      local oldDevices = table.copy(devices)
+      devices = {}
+      for _,d in ipairs(ddata) do
+        devices[d.id] = oldDevices[d.id] or false
+        DG:addDevice(d)
       end
-      local function filter(ds,df)
-        local res = {}
-        for id,d in pairs(ds) do 
-          local match = id:match("(.*_.*)_") or id
-          if df[match] then res[id] = d end 
+      self.store.devices = devices
+      self:populateDeviceSelector()
+      self:DGET("/scenes",function(sdata)
+        for _,d in ipairs(sdata) do
+          DG:addScene(d)
         end
-        return res
-      end
-      self:DGET("/home",function(hdata)
-        local hub = DG.devices.type['gateway']
-        local attr = hub.attributes
-        printf("Gateway: %s",attr.customName or "")
-        printf("model:%s",attr.model)
-        printf("firmware:%s",attr.firmwareVersion)
-        printf("hardware:%s",attr.hardwareVersion)  
-        quickApp:initChildren(filter(DG.childs,devices))
-        DG:linkDevices()
-        quickApp:listen()
-      end)
-    end)
-  end)
+        local function filter(ds,df)
+          -- Map each child id back to its parent device id (selection map key).
+          -- Most children use the bare device id, but AirSensor sub-children use
+          -- '<id>_pm25', '<id>_voc', '<id>_temp'. Try the id directly, then strip
+          -- the last '_<suffix>' segment and retry.
+          local res = {}
+          for id,d in pairs(ds) do
+            local base = id:match("^(.-)_[^_]+$")
+            if df[id] or (base and df[base]) then res[id] = d end
+          end
+          return res
+        end
+        self:DGET("/home",function(hdata)
+          local hub = DG.devices.type['gateway']
+          if hub then
+            local attr = hub.attributes
+            printf("Gateway: %s",attr.customName or "")
+            printf("model:%s",attr.model)
+            printf("firmware:%s",attr.firmwareVersion)
+            printf("hardware:%s",attr.hardwareVersion)
+          end
+          self._initBackoff = 5 -- reset backoff after full success
+          self:updateView("titelLabel","text","Dirigera v"..VERSION)
+          quickApp:initChildren(filter(DG.childs,devices))
+          DG:linkDevices()
+          quickApp:listen()
+        end, function(err) onError("/home", err) end)
+      end, function(err) onError("/scenes", err) end)
+    end, function(err) onError("/devices", err) end)
+  end
+  bootstrap()
 end
 
 function QuickApp:populateDeviceSelector()
@@ -219,10 +257,3 @@ function QuickApp:selectDevices(data)
   end
   self.store.devices = devices
 end
-
--- quickApp:post(function() quickApp:scene("Tända sovrum",true) end,3000)
--- quickApp:post(function() quickApp:scene("Tända sovrum",false) end,6000)
---quickApp:createScene("Test42")
---quickApp:DDEL("/scenes/716340ae-4124-4445-bac7-32a2e0bb1a9e")
---quickApp:post(function() DG.devices.name['Led sovrum'].object:turnOn() end,3000)
---quickApp:post(function() DG.devices.name['Led sovrum'].object:turnOff() end,6000)

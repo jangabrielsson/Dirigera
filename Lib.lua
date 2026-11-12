@@ -63,124 +63,111 @@ function urlencode(str)
   return str	
 end
 
+-- Safe JSON decode for HTTP response bodies. Returns decoded value on success,
+-- or nil and logs an error tagged with `name`. Empty body decodes to {}.
+function safeDecode(body, name)
+  if body == nil or body == "" then return {} end
+  local ok, res = pcall(json.decode, body)
+  if not ok or res == nil then
+    ERRORF("%s: malformed JSON: %s", name or "decode", tostring(body):sub(1,200))
+    return nil
+  end
+  return res
+end
+
 ---------------------------------------------------------------
 ---  HTTP GET/PUT ---------------------------------------------
 ---------------------------------------------------------------
-function QuickApp:DGET(url,cb)
+
+-- Build the standard HTTPClient options table for a Dirigera request.
+-- The hub presents a self-signed certificate, so cert validation is
+-- disabled here. Treat the hub as trusted-LAN-only.
+local function httpOpts(method, body)
+  local headers = { ["Authorization"] = "Bearer "..quickApp.store.token }
+  if body ~= nil then headers["Content-Type"] = "application/json" end
+  return {
+    method = method,
+    headers = headers,
+    data = body,
+    timeout = 10000,
+    checkCertificate = false,
+  }
+end
+
+function QuickApp:DGET(url,cb,onError)
   net.HTTPClient():request(Hub.api_base_url..url, {
-    options = {
-      method = 'GET',
-      headers = {
-        ["Authorization"] = "Bearer "..self.store.token
-      },
-      timeout = 10000,
-      checkCertificate = false,
-    },
+    options = httpOpts('GET'),
     success = function(response)
-      local data = json.decode(response.data)
+      local data = safeDecode(response.data, "DGET "..url)
+      if data == nil then if onError then onError("decode") end return end
       cb(data)
     end,
     error = function(err)
       ERRORF("Error get data: %s", err)
+      if onError then onError(err) end
     end
   })
 end
 
 function QuickApp:DPUT(url,data,cb)
-  url = Hub.api_base_url..url
-  data = json.encode(data)
-  local auth = "Bearer "..self.store.token
-  DEBUGF('http',"PATCH: %s %s",url,data or "")
-  net.HTTPClient():request(url, {
-    options = {
-      method = 'PATCH',
-      headers = {
-        ["Content-Type"] = "application/json",
-        ["Authorization"] = auth,
-      },
-      data = data,
-      timeout = 10000,
-      checkCertificate = false,
-    },
+  local fullUrl = Hub.api_base_url..url
+  local body = json.encode(data)
+  DEBUGF('http',"PATCH: %s %s",fullUrl,body or "")
+  net.HTTPClient():request(fullUrl, {
+    options = httpOpts('PATCH', body),
     success = function(response)
       if response.status > 204 then
         ERRORF("Error put data: %s", response.status)
         return
       end
-      local data = {}
-      if response.data and response.data ~= "" then
-        data = json.decode(response.data)
-      end
-      if cb then cb(data) end
+      local resp = safeDecode(response.data, "DPUT "..url)
+      if resp == nil then return end
+      if cb then cb(resp) end
     end,
-    error = function(err,s,g)
-      ERRORF("Error put data: %s %s", err,data)
+    error = function(err)
+      ERRORF("Error put data: %s %s", err, body)
     end
   })
 end
 
 function QuickApp:DPOST(url,data,cb)
-  url = Hub.api_base_url..url
-  data = data and json.encode(data) or nil
-  local auth = "Bearer "..self.store.token
-  DEBUGF('http',"POST: %s %s",url,data or "")
-  net.HTTPClient():request(url, {
-    options = {
-      method = 'POST',
-      headers = {
-        ["Content-Type"] = "application/json",
-        ["Authorization"] = auth,
-      },
-      data = data,
-      timeout = 10000,
-      checkCertificate = false,
-    },
+  local fullUrl = Hub.api_base_url..url
+  local body = data and json.encode(data) or nil
+  DEBUGF('http',"POST: %s %s",fullUrl,body or "")
+  net.HTTPClient():request(fullUrl, {
+    options = httpOpts('POST', body),
     success = function(response)
       if response.status > 204 then
-        ERRORF("Error post data: %s", response.status,data or "")
+        ERRORF("Error post data: status=%s data=%s", response.status, body or "")
         return
       end
-      local data = {}
-      if response.data and response.data ~= "" then
-        data = json.decode(response.data)
-      end
-      if cb then cb(data) end
+      local resp = safeDecode(response.data, "DPOST "..url)
+      if resp == nil then return end
+      if cb then cb(resp) end
     end,
-    error = function(err,s,g)
-      ERRORF("Error post data: %s %s", err,data or "")
+    error = function(err)
+      ERRORF("Error post data: %s %s", err, body or "")
     end
   })
 end
 
 function QuickApp:DDEL(url,data,cb)
-  url = Hub.api_base_url..url
-  data = data and json.encode(data) or nil
-  local auth = "Bearer "..self.store.token
-  DEBUGF('http',"DELETE: %s %s",url,data or "")
-  net.HTTPClient():request(url, {
-    options = {
-      method = 'DELETE',
-      headers = {
-        ["Content-Type"] = "application/json",
-        ["Authorization"] = auth,
-      },
-      data = data,
-      timeout = 10000,
-      checkCertificate = false,
-    },
+  local fullUrl = Hub.api_base_url..url
+  local body = data and json.encode(data) or nil
+  DEBUGF('http',"DELETE: %s %s",fullUrl,body or "")
+  net.HTTPClient():request(fullUrl, {
+    options = httpOpts('DELETE', body),
     success = function(response)
       if response.status > 204 then
-        ERRORF("Error delete data: %s", response.status,data or "")
+        ERRORF("Error delete data: status=%s data=%s", response.status, body or "")
         return
       end
-      local data = {}
-      if response.data and response.data ~= "" then
-        data = json.decode(response.data)
-      end
-      if cb then cb(data) end
+      local resp = safeDecode(response.data, "DDEL "..url)
+      if resp == nil then return end
+      if cb then cb(resp) end
     end,
-    error = function(err,s,g)
-      ERRORF("Error delete data: %s %s", err,data or "")
+    error = function(err)
+      ERRORF("Error delete data: %s %s", err, body or "")
     end
   })
 end

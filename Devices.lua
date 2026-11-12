@@ -189,7 +189,10 @@ function QuickApp:defineClasses()
     if level > 100 then level = 100 elseif level < 1 then level = 1 end
     quickApp:DPUT(fmt("/devices/%s",self.id),{{attributes = {lightLevel = level}}})
   end
-  function Light:setRGB(r,g,b)
+  function Light:setRGB(r,g,b,w)
+    -- w is accepted for symmetry with the HC3 colorController API but the
+    -- Dirigera hub controls colour via HSV (no separate white channel for RGB
+    -- bulbs); the white component is intentionally ignored here.
     if not self.canReceive.colorHue then
       ERRORF("Device %s can't recieve colorHue",self.name)
       return
@@ -208,6 +211,11 @@ function QuickApp:defineClasses()
       return
     end
     local attrs = self.attributes
+    if not (attrs.colorTemperatureMin and attrs.colorTemperatureMax) then
+      ERRORF("Device %s missing colorTemperatureMin/Max",self.name)
+      return
+    end
+    -- IKEA mireds: Min > Max numerically (Min = warm/high mired, Max = cool/low mired).
     local tint = attrs.colorTemperatureMin - attrs.colorTemperatureMax
     temp = round(attrs.colorTemperatureMax + tint*temp/255.0)
     if temp > attrs.colorTemperatureMin then 
@@ -234,6 +242,7 @@ function QuickApp:defineClasses()
     if self.colorMode == 'temperature' then
       if self.colorTemperature and self.child.setTemperature then
         local attrs = self.attributes
+        if not (attrs.colorTemperatureMin and attrs.colorTemperatureMax) then return end
         if self.colorTemperature > attrs.colorTemperatureMin then
           self.colorTemperature = attrs.colorTemperatureMin
         end
@@ -246,7 +255,7 @@ function QuickApp:defineClasses()
         self.child:updateTemperature(temp)
       end
     elseif self.colorMode == 'color' then
-      if self.colorHue and color and self.child.updateColor then
+      if self.colorHue and self.colorSaturation and self.lightLevel and self.child.updateColor then
         local r,g,b = HSV2RGB(self.colorHue,100*self.colorSaturation,self.lightLevel)
         self.child:updateColor(r,g,b,self.lightLevel or 0)
       end
@@ -580,7 +589,9 @@ function QuickApp:defineClasses()
     devices.id[d.id] = d
     devices.type[d.type] = d
     devices.deviceType[d.deviceType] = d
-    devices.name[d.attributes.customName] = d
+    if d.attributes.customName and d.attributes.customName ~= "" then
+      devices.name[d.attributes.customName] = d
+    end
     d.object = (deviceTypeMap[d.deviceType] or NoDevice)(d)
   end
   
