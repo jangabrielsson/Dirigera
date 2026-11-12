@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.1.6] - 2026-11-12
+
+## Changes in v0.1.6
+
+- ✨ **Feature**: Add code review and bug report documentation for Dirigera project
+  - Introduced CODE_REVIEW.md detailing findings and recommendations for the Dirigera QuickApp, highlighting critical issues, security concerns, and suggestions for improvement.
+  - Created DIRIGERA_FLUA_BUG_REPORT.md to document bugs encountered during the conversion from plua to flua, including issues with API mode precedence and UI rendering.
+  - Added dirigera_plua_flua_migration.md outlining the migration status, what works, and areas needing fixes, along with recommendations for improving the migration process.
+- ✨ **Feature**: chore: remove obsolete GitHub workflows and add release v0.1.5 forum post HTML
+
+
+*Generated automatically from git commits*
+
 ## [v0.1.5] - 2026-04-06
 
 ## Changes in v0.1.5

@@ -33,7 +33,7 @@ SHA 256 library from @tinman
 --%%mode:offline
 --%%var:refresh=false
 
-local VERSION = "0.1.5"
+local VERSION = "0.1.6"
 DG = DG or { childs = {}}
 local TOKEN = os.getenv and os.getenv("DIRIGERA_token") or nil
 
