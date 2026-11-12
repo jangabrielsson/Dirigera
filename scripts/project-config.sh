@@ -41,7 +41,7 @@ DIST_DIR="dist"
 # Format: "source_file:output_file:build_command"
 # The build_command can use {SOURCE} and {OUTPUT} placeholders
 declare -a ARTIFACTS=(
-    "Dirigera.lua:dist/Dirigera.fqa:plua -t pack {SOURCE} {OUTPUT}"
+    "Dirigera.lua:dist/Dirigera.fqa:flua --tool pack {SOURCE} -o {OUTPUT} -f"
 )
 
 # Files to include in git commits for releases

@@ -24,7 +24,7 @@ SHA 256 library from @tinman
 --%%u:{multi="select_ID_4",text="Devices",visible=true,onToggled="selectDevices",options={}}
 
 --%%file:$sha2.lua,sha2
---%%file:$qwikchild.lua,QC
+--%%file:$qwikchild.lua,Qwik
 --%%file:Lib.lua,Lib
 --%%file:Devices.lua,Devices
 --%%file:Auth.lua,Auth
