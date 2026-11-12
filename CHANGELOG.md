@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.1.7] - 2026-11-12
+
+## Changes in v0.1.7
+
+- ✨ **Feature**: Release v0.1.6 - Update forum post and documentation
+  - Added HTML forum post for release v0.1.6, detailing new features and download links.
+  - Updated scripts to replace 'plua' with 'flua' for building .fqa files.
+  - Modified README and project configuration files to reflect changes in build commands and dependencies.
+  - Removed obsolete GitHub workflows and added release notes for v0.1.5.
+
+
+*Generated automatically from git commits*
+
 ## [v0.1.6] - 2026-11-12
 
 ## Changes in v0.1.6
